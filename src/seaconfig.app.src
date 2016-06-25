@@ -1,0 +1,14 @@
+{application, seaconfig,
+  [
+    {description, ""},
+    {vsn, "1"},
+    {registered, []},
+    {modules, []},
+    {applications, [
+      kernel,
+      stdlib,
+      jsone
+    ]},
+    {mod, {seaconfig_app, []}},
+    {env, [{etcd_url, "http://127.0.0.1:2379/v2/keys/config/bws/?recursive=true"}]}
+  ]}.
