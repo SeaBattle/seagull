@@ -22,9 +22,6 @@
 -define(MAILGUN_API_URL, <<"email/api_url">>).
 -define(MAILGUN_API_KEY, <<"email/api_key">>).
 
-%% Html templates
--define(NEW_PASS_HTML, <<"su_new_password.html">>).
-
 %% UserService conf
 -define(USER_SERVICE_HTTP_PORT, <<"user_service/http/port">>).
 -define(USER_SERVICE_HTTP_ACCEPTORS, <<"user_service/http/acceptors">>).
