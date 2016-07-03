@@ -13,3 +13,4 @@ rel/example_project
 
 /.idea/
 /.erlang.mk/
+/SeaConfig.iml
