@@ -17,6 +17,13 @@
 -define(DATABASE_OVERFLOW_TTL_CONF, <<"database/pool/overflow_ttl">>).
 -define(DATABASE_OVERFLOW_CHECK_CONF, <<"database/pool/overflow_check">>).
 
+%% Cache conf vars
+-define(CACHE_HOSTS_CONF, <<"cache/hosts">>).
+-define(CACHE_SIZE_CONF, <<"cache/pool/size">>).
+-define(CACHE_OVERFLOW_CONF, <<"cache/pool/overflow">>).
+-define(CACHE_OVERFLOW_TTL_CONF, <<"cache/pool/overflow_ttl">>).
+-define(CACHE_OVERFLOW_CHECK_CONF, <<"cache/pool/overflow_check">>).
+
 %% Email conf vars
 -define(MAILGUN_DOMAIN_CONF, <<"email/domain">>).
 -define(MAILGUN_API_URL_CONF, <<"email/api_url">>).
