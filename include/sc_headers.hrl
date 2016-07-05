@@ -22,6 +22,11 @@
 -define(MAILGUN_API_URL, <<"email/api_url">>).
 -define(MAILGUN_API_KEY, <<"email/api_key">>).
 
+%% Auth conf vars
+-define(MAILGUN_DOMAIN, <<"auth/salt_len">>).
+-define(MAILGUN_API_URL, <<"auth/secret_len">>).
+-define(MAILGUN_API_KEY, <<"auth/secret_iter">>).
+
 %% UserService conf
 -define(USER_SERVICE_HTTP_PORT, <<"user_service/http/port">>).
 -define(USER_SERVICE_HTTP_ACCEPTORS, <<"user_service/http/acceptors">>).
