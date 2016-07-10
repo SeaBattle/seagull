@@ -35,6 +35,7 @@
 -define(SECRET_ITER_CONF, <<"auth/secret_iter">>).
 
 %% UserService conf
+-define(USER_SERVICE_HOSTS, <<"user_service/http/hosts">>).
 -define(USER_SERVICE_HTTP_PORT_CONF, <<"user_service/http/port">>).
 -define(USER_SERVICE_HTTP_ACCEPTORS_CONF, <<"user_service/http/acceptors">>).
 
