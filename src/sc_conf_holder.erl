@@ -138,6 +138,7 @@ do_save_conf(#{<<"key">> := <<"/config/", _/binary>>, <<"nodes">> := Conf}) ->
 set_conf(Url, Key, Value) ->  %TODO testme!
   case httpc:request(put, {<<Url/binary, Key/binary>>, <<"text/html">>, [], Value}, [], []) of
     {ok, {{_, 200, _}, _, _Res}} ->  %TODO match res
+      ets:insert(?CONF_ETS, {Key, Value}),
       true;
     Reason ->
       {false, Reason}
