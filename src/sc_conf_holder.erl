@@ -11,7 +11,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, get_conf/1]).
+-export([start_link/0, get_conf/1, set_conf/2, get_conf/2]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -25,7 +25,7 @@
 -define(CONF_ETS, ss_conf).
 -define(UPDATE_CONF_INTERVAL, 900000). %15 minutes
 
--record(state, {url}).
+-record(state, {url :: binary()}).
 
 %%%===================================================================
 %%% API
@@ -40,6 +40,10 @@ get_conf(Var, Default) ->
 -spec get_conf(binary()) -> binary().
 get_conf(Var) ->
   get_conf(Var, undefined).
+
+-spec set_conf(binary(), binary()) -> true | {false, any()}.
+set_conf(Key, Value) ->
+  gen_server:call(?MODULE, {set, Key, Value}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -64,6 +68,9 @@ init([]) ->
   {ok, #state{url = Url}}.
 
 
+handle_call({set, Key, Value}, _From, State = #state{url = Url}) ->
+  set_conf(Url, Key, Value),
+  {reply, ok, State};
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
 
@@ -126,3 +133,12 @@ do_save_conf(#{<<"key">> := <<"/config/", Key/binary>>, <<"value">> := Value}) -
   ets:insert(?CONF_ETS, {Key, Value});
 do_save_conf(#{<<"key">> := <<"/config/", _/binary>>, <<"nodes">> := Conf}) ->
   lists:foreach(fun save_conf/1, Conf).
+
+%% @private
+set_conf(Url, Key, Value) ->  %TODO testme!
+  case httpc:request(put, {<<Url/binary, Key/binary>>, <<"text/html">>, [], Value}, [], []) of
+    {ok, {{_, 200, _}, _, _Res}} ->  %TODO match res
+      true;
+    Reason ->
+      {false, Reason}
+  end.
