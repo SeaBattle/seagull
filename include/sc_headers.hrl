@@ -37,3 +37,8 @@
 %% UserService conf
 -define(USER_SERVICE_HTTP_PORT_CONF, <<"user_service/http/port">>).
 -define(USER_SERVICE_HTTP_ACCEPTORS_CONF, <<"user_service/http/acceptors">>).
+
+%% SeaServer conf
+-define(SEASERVER_HANDLER_PROTOCOLS, <<"seaserver/handler/protocols">>).
+-define(SEASERVER_HANDLER_TCP_PORT, <<"seaserver/handler/tcp/port">>).
+-define(SEASERVER_HANDLER_WEBSOCKET_PORT, <<"seaserver/handler/websocket/port">>).
