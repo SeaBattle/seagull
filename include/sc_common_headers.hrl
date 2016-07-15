@@ -14,3 +14,5 @@
 -define(LANG_HEAD, <<"lang">>).  %user's language (for password's email localisation)
 -define(SECRET_HEAD, <<"secret">>).    %user's password (is generated in su_user_logic)
 -define(USER_TOKEN, <<"token">>).      %user is registered online by this token in su_user_logic
+-define(RESULT_HEAD, <<"result">>).
+-define(CODE_HEAD, <<"code">>).
