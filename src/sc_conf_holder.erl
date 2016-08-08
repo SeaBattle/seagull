@@ -27,6 +27,7 @@
 -define(CONF_ETS, ss_conf).
 -define(INORDER_KEYS, [?USER_SERVICE_HOSTS]).
 -define(UPDATE_CONF_INTERVAL, 900000). %15 minutes
+-define(QUERY_SERVICES_INTERVAL, 500).  %0.5 sec for query services
 
 -record(state, {url :: string()}).
 
