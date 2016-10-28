@@ -7,8 +7,9 @@
     {applications, [
       kernel,
       stdlib,
+      inets,
       jsone
     ]},
     {mod, {seaconfig_app, []}},
-    {env, [{etcd_url, "http://127.0.0.1:2379/v2/keys/config/bws/"}]}
+    {env, []}
   ]}.

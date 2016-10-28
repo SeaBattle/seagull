@@ -71,7 +71,8 @@ start_link() ->
 
 init([]) ->
   ets:new(?CONF_ETS, [named_table, protected, {read_concurrency, true}, {write_concurrency, true}]),
-  {ok, Url} = application:get_env(seaconfig, etcd_url),
+  {ok, Backend} = application:get_env(seaconfig, backend),
+  {Module, BackendUrl} = sc_backend_man:prepare_backend(Backend),
   true = load_conf(Url),
   erlang:send_after(?UPDATE_CONF_INTERVAL, self(), update_conf),
   {ok, #state{url = Url}}.
