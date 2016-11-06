@@ -15,8 +15,8 @@
 -export([get_service/2, get_services/1]).
 
 
-get_service(Host, Name) ->
+get_service(_Host, _Name) ->
   erlang:error(not_implemented).
 
-get_services(Host) ->
+get_services(_Host) ->
   erlang:error(not_implemented).
