@@ -13,7 +13,7 @@
 -include("sc_headers.hrl").
 
 %% API
--export([start_link/0, get_conf/1, set_conf/2, get_conf/2, set_inorder_conf/2]).
+-export([start_link/0, get_service_conf/0]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -24,35 +24,19 @@
   code_change/3]).
 
 -define(SERVER, ?MODULE).
--define(CONF_ETS, ss_conf).
--define(INORDER_KEYS, [?USER_SERVICE_HOSTS]).
--define(UPDATE_CONF_INTERVAL, 900000). %15 minutes
--define(QUERY_SERVICES_INTERVAL, 500).  %0.5 sec for query services
+-define(CONF_ETS, sc_conf).
 
--record(state, {url :: string()}).
+-record(state, {url :: string(), module :: atom()}).
 
 %%%===================================================================
 %%% API
 %%%===================================================================
--spec get_conf(binary(), any()) -> any().
-get_conf(Var, Default) ->
-  case ets:lookup(?CONF_ETS, Var) of
-    [] -> Default;
-    [{_, Res}] -> Res;  %ordinary key
-    Res = [_ | _] -> lists:map(fun({_, G, R}) -> {G, R} end, Res)  %generated keys
+-spec get_service_conf() -> {atom(), string()} | undefined.
+get_service_conf() ->
+  case ets:lookup(?CONF_ETS, conf) of
+    [{_, Module, Url}] -> {Module, Url};
+    _ -> undefined
   end.
-
--spec get_conf(binary()) -> binary().
-get_conf(Var) ->
-  get_conf(Var, undefined).
-
--spec set_conf(binary(), binary()) -> true | {false, any()}.
-set_conf(Key, Value) ->
-  gen_server:call(?MODULE, {set, Key, Value}).
-
--spec set_inorder_conf(binary(), binary()) -> true | {false, any()}.
-set_inorder_conf(Key, Value) ->
-  gen_server:call(?MODULE, {set_inorder, Key, Value}).
 
 %%--------------------------------------------------------------------
 %% @doc
@@ -73,17 +57,10 @@ init([]) ->
   ets:new(?CONF_ETS, [named_table, protected, {read_concurrency, true}, {write_concurrency, true}]),
   {ok, Backend} = application:get_env(seaconfig, backend),
   {Module, BackendUrl} = sc_backend_man:prepare_backend(Backend),
-  true = load_conf(Url),
-  erlang:send_after(?UPDATE_CONF_INTERVAL, self(), update_conf),
-  {ok, #state{url = Url}}.
+  ets:insert(?CONF_ETS, {conf, Module, BackendUrl}),
+  {ok, #state{url = BackendUrl, module = Module}}.
 
 
-handle_call({set, Key, Value}, _From, State = #state{url = Url}) ->
-  set_conf(Url, Key, Value),
-  {reply, ok, State};
-handle_call({set_inorder, Key, Value}, _From, State = #state{url = Url}) ->
-  set_inorder_conf(Url, Key, Value),
-  {reply, ok, State};
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
 
@@ -91,11 +68,6 @@ handle_call(_Request, _From, State) ->
 handle_cast(_Request, State) ->
   {noreply, State}.
 
-
-handle_info(update_conf, State = #state{url = Url}) ->  %update configuration
-  _ = load_conf(Url),
-  erlang:send_after(?UPDATE_CONF_INTERVAL, self(), update_conf),
-  {noreply, State, hibernate};
 handle_info(_Info, State) ->
   {noreply, State}.
 
@@ -120,68 +92,3 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
-
-%% @private
-load_conf(Url) ->
-  case httpc:request(get, {Url ++ "?recursive=true", []}, [], []) of
-    {ok, {{_, 200, _}, _, Res}} ->
-      Decoded = jsone:decode(list_to_binary(Res), [{object_format, map}]),
-      save_conf(Decoded),
-      true;
-    Reason ->
-      timer:sleep(1000),  %sleep before crash so it can be restarted via supervisor on start
-      {false, Reason}
-  end.
-
-%% @private
-save_conf(#{<<"node">> := #{<<"nodes">> := Conf}}) ->
-  lists:foreach(fun parse_and_save/1, Conf).
-
-%% @private
-parse_and_save(#{<<"key">> := <<"/config/">>, <<"nodes">> := Conf}) ->
-  lists:foreach(fun do_save_conf/1, Conf).
-
-%% @private
-do_save_conf(#{<<"key">> := <<"/config/", Key/binary>>, <<"value">> := Value}) ->
-  case lists:member(Key, ?INORDER_KEYS) of
-    true -> %split key to fixed and generated part
-      Splitted = binary:split(Key, <<"/">>, [global]),
-      End = lists:last(Splitted),
-      UKey = binary:replace(Key, <<<<"/">>/binary, End/binary>>, <<"">>),
-      ets:insert(?CONF_ETS, {UKey, Splitted, Value});
-    false ->  %normal key, just save it
-      ets:insert(?CONF_ETS, {Key, Value})
-  end;
-do_save_conf(#{<<"key">> := <<"/config/", _/binary>>, <<"nodes">> := Conf}) ->
-  lists:foreach(fun save_conf/1, Conf).
-
-%% @private
-set_conf(Url, Key, Value) ->  %TODO testme!
-  case httpc:request(put, {Url ++ binary_to_list(Key), <<"text/html">>, [], Value}, [], []) of
-    {ok, {{_, 200, _}, _, _Res}} ->  %TODO match res
-      ets:insert(?CONF_ETS, {Key, Value}),
-      true;
-    Reason ->
-      {false, Reason}
-  end.
-
-%% @private
-set_inorder_conf(Url, Key, Value) ->  %TODO testme!
-  FullUrl = Url ++ binary_to_list(Key),
-  case httpc:request(post, {FullUrl, <<"text/html">>, [], Value}, [], []) of
-    {ok, {{_, 200, _}, _, _Res}} ->  %TODO match res
-      save_inroder_conf(FullUrl);
-    Reason ->
-      {false, Reason}
-  end.
-
-%% @private
-save_inroder_conf(FullUrl) ->  %TODO testme!
-  case httpc:request(get, {FullUrl, []}, [], []) of
-    {ok, {{_, 200, _}, _, Res}} ->
-      #{<<"node">> := Decoded} = jsone:decode(list_to_binary(Res), [{object_format, map}]),
-      parse_and_save(Decoded),
-      true;
-    Reason ->
-      {false, Reason}
-  end.

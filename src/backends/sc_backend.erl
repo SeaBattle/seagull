@@ -9,6 +9,7 @@
 -module(sc_backend).
 -author("tihon").
 
+%% TODO add register api
 -callback get_service(Host :: string(), Name :: binary()) -> list().
 
 -callback get_services(Host) -> list().

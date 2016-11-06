@@ -1,7 +1,8 @@
 # SeaConfig
-SeaConfig service. Submodule for working with configuration in other sea services.
+Configuration api using with `etcd` and `consul` for service-discovery and
+key-value in microservices.
 
-## Usage
+## Configuration
 For configuration use `sys.config`:
 
     {seaconfig, 
@@ -42,3 +43,41 @@ Example:
     ResetAllPassFun = fun(NewPass) -> database_man ! {reset_pass, NewPass} end, 
     seaconfig:add_callback(<<"user_pass">>, ResetAllPassFun).
 Callback can be removed with `remove_callback:/1` function.
+
+## Usage
+### Unified api
+After configuring backend you can use unified api:
+
+    1> seaconfig:get_services().
+    #{<<"consul">> => [],<<"postgres">> => [],<<"redis">> => []}
+
+### Consul special api
+You can use consul special api with consul backend:
+
+    1> seaconfig:dns_request("redis").
+    [{1,1,6379,"tihon_home.node.dc1.consul"},
+    {1,1,6379,"tihon_work.su.node.dc1.consul"}]
+    2> seaconfig:get_service_near("redis").
+    {ok, #{<<"Address">> => <<"192.168.1.204">>,
+            <<"CreateIndex">> => 313,
+            <<"ModifyIndex">> => 313,
+            <<"Node">> => <<"tihon_work.su">>,
+            <<"ServiceAddress">> => <<>>,
+            <<"ServiceEnableTagOverride">> => false,
+            <<"ServiceID">> => <<"tihon_work.su:redis:6379">>,
+            <<"ServiceName">> => <<"redis">>,
+            <<"ServicePort">> => 6379,
+            <<"ServiceTags">> => [],
+            <<"TaggedAddresses">> => #{<<"wan">> => <<"192.168.1.204">>}}, 
+            [#{<<"Address">> => <<"192.168.1.105">>,
+                <<"CreateIndex">> => 231,
+                <<"ModifyIndex">> => 231,
+                <<"Node">> => <<"tihon_home">>,
+                <<"ServiceAddress">> => <<>>,
+                <<"ServiceEnableTagOverride">> => false,
+                <<"ServiceID">> => <<"tihon_home:redis:6379">>,
+                <<"ServiceName">> => <<"redis">>,
+                <<"ServicePort">> => 6379,
+                <<"ServiceTags">> => [],
+                <<"TaggedAddresses">> => #{<<"lan">> => <<"192.168.1.105">>,
+                    <<"wan">> => <<"192.168.1.105">>}}]

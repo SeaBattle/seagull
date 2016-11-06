@@ -10,7 +10,7 @@
 -author("tihon").
 
 %% API
--export([prepare_backend/1]).
+-export([prepare_backend/1, request_backend/1, request_backend/2]).
 
 -spec prepare_backend(tuple()) -> tuple().
 prepare_backend({Backend, BackendUrl}) when is_atom(Backend) ->
@@ -19,3 +19,17 @@ prepare_backend({Backend, BackendUrl}) when is_atom(Backend) ->
              etcd -> sc_backend_etcd
            end,
   {Module, BackendUrl}.
+
+-spec request_backend(atom()) -> any().
+request_backend(Request) ->
+  case sc_conf_holder:get_service_conf() of
+    undefined -> throw(no_conf);
+    {Module, Url} -> Module:Request(Url)
+  end.
+
+-spec request_backend(atom(), list()) -> any().
+request_backend(Request, Arguments) ->
+  case sc_conf_holder:get_service_conf() of
+    undefined -> throw(no_conf);
+    {Module, Url} -> erlang:apply(Module, Request, [Url | Arguments])
+  end.
