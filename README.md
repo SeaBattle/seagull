@@ -33,6 +33,17 @@ Full Example:
                 {cache, [{enable, true}, {update_time, 15000}]}
             ]
         }
+### Service auto registration
+To make registration of your service on application start - add `seaconfig` to
+your applications and add this option to seaconfig conf in `sys.config`:
+
+    {seaconfig, 
+            [
+                ...
+                {autoregister, #{service => Service, address => Address, port => Port}},
+                ...
+            ]
+        }
 ### On update callbacks
 If you enabled cache update - you can add callback function, which will 
 be called, when value is updated.  

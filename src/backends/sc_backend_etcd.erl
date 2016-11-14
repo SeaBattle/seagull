@@ -12,11 +12,20 @@
 -behavior(sc_backend).
 
 %% API
--export([get_service/2, get_services/1]).
+-export([get_service/2, get_services/1, register/4, get_value/2, set_value/3]).
 
 
 get_service(_Host, _Name) ->
   erlang:error(not_implemented).
 
 get_services(_Host) ->
+  erlang:error(not_implemented).
+
+register(_Host, _Service, _Address, _Port) ->
+  erlang:error(not_implemented).
+
+get_value(_Host, _Key) ->
+  erlang:error(not_implemented).
+
+set_value(_Host, _Key, _Value) ->
   erlang:error(not_implemented).

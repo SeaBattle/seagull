@@ -16,7 +16,7 @@
 -export([add_callback/2, remove_callback/1]).
 
 %% unified api
--export([get_service/1, get_services/0]).
+-export([get_service/1, get_services/0, register/3]).
 
 %% consul api
 -export([get_service_near/1, get_service_near/2, dns_request/1, dns_request/2, dns_request/3]).
@@ -32,7 +32,7 @@ remove_callback(_Var) ->
 
 %% unified api
 get_service(Service) ->
-  sc_backend_man:request_backend(get_service, Service).
+  sc_backend_man:request_backend(get_service, [Service]).
 
 get_services() ->
   sc_backend_man:request_backend(get_services).
@@ -49,6 +49,9 @@ get_service_near(Service, Node) ->
       sc_backend_consul:get_service_near(Url, Service, Node);
     {_, _} -> throw(wrong_backend)
   end.
+
+register(Service, Addr, Port) ->
+  sc_backend_man:request_backend(register, [Service, Addr, Port]).
 
 dns_request(Service) ->
   dns_request(Service, ?LOCAL_CONSUL_IP).

@@ -58,19 +58,17 @@ init([]) ->
   {ok, Backend} = application:get_env(seaconfig, backend),
   {Module, BackendUrl} = sc_backend_man:prepare_backend(Backend),
   ets:insert(?CONF_ETS, {conf, Module, BackendUrl}),
+  check_auto_register(Module, BackendUrl),
   {ok, #state{url = BackendUrl, module = Module}}.
-
 
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
-
 
 handle_cast(_Request, State) ->
   {noreply, State}.
 
 handle_info(_Info, State) ->
   {noreply, State}.
-
 
 terminate(_Reason, _State) ->
   ok.
@@ -92,3 +90,10 @@ code_change(_OldVsn, State, _Extra) ->
 %%%===================================================================
 %%% Internal functions
 %%%===================================================================
+%% @private
+check_auto_register(Module, BackendUrl) ->
+  case application:get_env(seaconfig, autoregister, false) of
+    false -> ok;
+    #{service := Service, address := Address, port := Port} ->
+      Module:register(BackendUrl, Service, Address, Port)
+  end.

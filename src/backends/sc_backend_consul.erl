@@ -12,14 +12,16 @@
 -behavior(sc_backend).
 
 %% Callbacks
--export([get_service/2, get_services/1]).
+-export([get_service/2, get_services/1, register/4, get_value/2, set_value/3]).
 
 %% Consul API
 -export([dns_request/3, get_service_near/3]).
 
 -define(SERVICES, "~s/v1/catalog/services/").
 -define(SERVICE, "~s/v1/catalog/service/~s").
+-define(REGISTER, "~s/v1/catalog/register").
 -define(SERVICE_NEAR, "~s/v1/catalog/service/~s?near=~s").
+-define(KEYVALUE, "~s/v1/kv/~s").
 
 -define(MAP, [{object_format, map}]).
 
@@ -58,3 +60,42 @@ get_service_near(Addr, Name, Node) ->
 dns_request(Service, ConsulIp, Port) ->
   {ok, Ip} = inet:parse_address(ConsulIp),
   inet_res:lookup(Service ++ ".service.consul", any, srv, [{nameservers, [{Ip, Port}]}]).
+
+-spec register(string(), string(), string(), integer()) -> ok | {error, any()}.
+register(Host, Service, Address, Port) ->
+  Url = io_lib:format(?REGISTER, [Host]),
+  Body = form_register_body(Service, Address, Port),
+  case httpc:request(put, {Url, [], "application/json", Body}, [], [{body_format, binary}]) of
+    {ok, {{_, 200, _}, _, _}} -> ok;
+    Err -> {error, Err}
+  end.
+
+-spec get_value(string(), binary()) -> ok | {error, any()}.
+get_value(Host, Key) ->
+  Url = io_lib:format(?KEYVALUE, [Host, Key]),
+  case httpc:request(get, {Url, []}, [], [{body_format, binary}]) of
+    {ok, {{_, 200, _}, _, Reply}} ->
+      #{<<"Value">> := Value} = jsone:decode(Reply, ?MAP),
+      {ok, base64:decode(Value)};
+    Err ->
+      {error, Err}
+  end.
+
+-spec set_value(string(), binary(), binary()) -> ok | {error, any()}.
+set_value(Host, Key, Value) ->
+  Url = io_lib:format(?KEYVALUE, [Host, Key]),
+  case httpc:request(put, {Url, [], "application/text", Value}, [], [{body_format, binary}]) of
+    {ok, {{_, 200, _}, _, _}} -> ok;
+    Err -> {error, Err}
+  end.
+
+%% @private
+form_register_body(Service, Address, Port) ->
+  jsone:encode(#{
+    <<"Service">> =>
+    #{
+      <<"Service">> => Service,
+      <<"Address">> => Address,
+      <<"Port">> => Port
+    }
+  }).
