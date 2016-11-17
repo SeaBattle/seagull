@@ -10,8 +10,6 @@
 
 -behaviour(gen_server).
 
--include("sc_headers.hrl").
-
 %% API
 -export([start_link/0, get_service_conf/0]).
 
