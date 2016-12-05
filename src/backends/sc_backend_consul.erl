@@ -75,7 +75,7 @@ get_value(Host, Key) ->
   Url = lists:flatten(io_lib:format(?KEYVALUE, [Host, Key])),
   case httpc:request(get, {Url, []}, [], [{body_format, binary}]) of
     {ok, {{_, 200, _}, _, Reply}} ->
-      #{<<"Value">> := Value} = jsone:decode(Reply, ?MAP),
+      [#{<<"Value">> := Value}] = jsone:decode(Reply, ?MAP),
       {ok, base64:decode(Value)};
     {ok, {{_, 404, _}, _, _}} ->
       {ok, undefined};
