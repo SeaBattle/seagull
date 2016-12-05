@@ -17,7 +17,7 @@ Example:
 
     {seaconfig, 
             [
-                {backend, {consul, "http://127.0.0.1:8500/"}}
+                {backend, {consul, "http://127.0.0.1:8500"}}
             ]
         }
 ### Caching kv
@@ -29,7 +29,7 @@ Full Example:
 
     {seaconfig, 
             [
-                {backend, {consul, "http://127.0.0.1:8500/"}},
+                {backend, {consul, "http://127.0.0.1:8500"}},
                 {cache, [{enable, true}, {update_time, 15000}]}
             ]
         }
