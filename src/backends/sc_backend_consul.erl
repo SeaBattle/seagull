@@ -27,7 +27,7 @@
 
 -spec get_service(string(), string()) -> {ok, map()} | {error, any()}.
 get_service(Addr, Name) ->
-  Url = io_lib:format(?SERVICE, [Addr, Name]),
+  Url = lists:flatten(io_lib:format(?SERVICE, [Addr, Name])),
   case httpc:request(get, {Url, []}, [], [{body_format, binary}]) of
     {ok, {{_, 200, _}, _, Reply}} ->
       {ok, jsone:decode(Reply, ?MAP)};
@@ -37,7 +37,7 @@ get_service(Addr, Name) ->
 
 -spec get_services(string()) -> {ok, map()} | {error, any()}.
 get_services(Addr) ->
-  Url = io_lib:format(?SERVICES, [Addr]),
+  Url = lists:flatten(io_lib:format(?SERVICES, [Addr])),
   case httpc:request(get, {Url, []}, [], [{body_format, binary}]) of
     {ok, {{_, 200, _}, _, Reply}} ->
       {ok, jsone:decode(Reply, ?MAP)};
@@ -47,7 +47,7 @@ get_services(Addr) ->
 
 -spec get_service_near(string(), string(), string()) -> {ok, map(), list()} | {error, any()}.
 get_service_near(Addr, Name, Node) ->
-  Url = io_lib:format(?SERVICE_NEAR, [Addr, Name, Node]),
+  Url = lists:flatten(io_lib:format(?SERVICE_NEAR, [Addr, Name, Node])),
   case httpc:request(get, {Url, []}, [], [{body_format, binary}]) of
     {ok, {{_, 200, _}, _, Reply}} ->
       [Near | Other] = jsone:decode(Reply, ?MAP),
@@ -63,7 +63,7 @@ dns_request(Service, ConsulIp, Port) ->
 
 -spec register(string(), string(), string(), integer()) -> ok | {error, any()}.
 register(Host, Service, Address, Port) ->
-  Url = io_lib:format(?REGISTER, [Host]),
+  Url = lists:flatten(io_lib:format(?REGISTER, [Host])),
   Body = form_register_body(Service, Address, Port),
   case httpc:request(put, {Url, [], "application/json", Body}, [], [{body_format, binary}]) of
     {ok, {{_, 200, _}, _, _}} -> ok;
@@ -72,7 +72,7 @@ register(Host, Service, Address, Port) ->
 
 -spec get_value(string(), binary()) -> ok | {error, any()}.
 get_value(Host, Key) ->
-  Url = io_lib:format(?KEYVALUE, [Host, Key]),
+  Url = lists:flatten(io_lib:format(?KEYVALUE, [Host, Key])),
   case httpc:request(get, {Url, []}, [], [{body_format, binary}]) of
     {ok, {{_, 200, _}, _, Reply}} ->
       #{<<"Value">> := Value} = jsone:decode(Reply, ?MAP),
@@ -83,7 +83,7 @@ get_value(Host, Key) ->
 
 -spec set_value(string(), binary(), binary()) -> ok | {error, any()}.
 set_value(Host, Key, Value) ->
-  Url = io_lib:format(?KEYVALUE, [Host, Key]),
+  Url = lists:flatten(io_lib:format(?KEYVALUE, [Host, Key])),
   case httpc:request(put, {Url, [], "application/text", Value}, [], [{body_format, binary}]) of
     {ok, {{_, 200, _}, _, _}} -> ok;
     Err -> {error, Err}
