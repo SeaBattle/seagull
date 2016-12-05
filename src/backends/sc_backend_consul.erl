@@ -70,7 +70,7 @@ register(Host, Service, Address, Port) ->
     Err -> {error, Err}
   end.
 
--spec get_value(string(), binary()) -> ok | {error, any()}.
+-spec get_value(string(), binary()) -> {ok, binary()} | {error, any()}.
 get_value(Host, Key) ->
   Url = lists:flatten(io_lib:format(?KEYVALUE, [Host, Key])),
   case httpc:request(get, {Url, []}, [], [{body_format, binary}]) of
