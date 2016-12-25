@@ -16,7 +16,7 @@
 -export([add_callback/2, remove_callback/1]).
 
 %% unified api
--export([get_service/1, get_services/0, register/3, get_value/1, set_value/2]).
+-export([get_service/1, get_services/0, register/3, get_value/1, set_value/2, get_value/2]).
 
 %% consul api
 -export([get_service_near/1, get_service_near/2, dns_request/1, dns_request/2, dns_request/3]).
@@ -55,6 +55,12 @@ register(Service, Addr, Port) ->
 
 get_value(Key) ->
   sc_backend_man:request_backend(get_value, [Key]).
+
+get_value(Key, Default) ->
+  case get_value(Key) of
+    undefined -> Default;
+    Value -> Value
+  end.
 
 set_value(Key, Value) ->
   sc_backend_man:request_backend(set_value, [Key, Value]).
