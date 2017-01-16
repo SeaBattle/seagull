@@ -13,13 +13,21 @@
 -define(LOCAL_CONSUL_IP, "127.0.0.1").
 
 %% conf holder api
--export([add_callback/2, remove_callback/1]).
+-export([add_backend/2, add_backend/3, add_callback/2, remove_callback/1]).
 
 %% unified api
 -export([get_service/1, get_services/0, register/3, get_value/1, set_value/2]).
 
 %% consul api
 -export([get_service_near/1, get_service_near/2, dns_request/1, dns_request/2, dns_request/3]).
+
+-spec add_backend(module(), string()) -> boolean().
+add_backend(Module, Url) ->
+  add_backend(Module, Url, []).
+
+-spec add_backend(module(), string(), poplists:proplist()) -> boolean().
+add_backend(Module, Url, Opts) ->
+  sc_backend_man:register_backend(Module, Url, Opts).
 
 %% conf holder api
 -spec add_callback(binary(), fun()) -> true.

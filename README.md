@@ -3,6 +3,7 @@ Configuration api using with `etcd` and `consul` for service-discovery and
 key-value in microservices.
 
 ## Configuration
+### Static
 For configuration use `sys.config`:
 
     {seaconfig, 
@@ -20,6 +21,13 @@ Example:
                 {backend, {consul, "http://127.0.0.1:8500"}}
             ]
         }
+### Dynamic
+In case you don't know consul url on compilation time you do not need to specify seaconfig 
+configuration in `sys.config`. Just when you obtain you module, url and other params call 
+`seaconfig:add_backend/2/3`. Third argument is a proplist with all your options (listed below).  
+Example:  
+
+    seaconfig:add_backend(consul, 172.0.0.2, [{cache, [{enable, true}, {update_time, 15000}]}]).
 ### Caching kv
 You can cache kv storage in ets by adding `{cache, [{enable, true}]}` to 
 `sys.config`. By default cache is `false`. Also you can add update interval

@@ -11,7 +11,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start_link/0, get_service_conf/0]).
+-export([start_link/0, get_service_conf/0, register_backend/3]).
 
 %% gen_server callbacks
 -export([init/1,
@@ -36,6 +36,9 @@ get_service_conf() ->
     _ -> undefined
   end.
 
+register_backend(Module, Url, Opts) ->
+  gen_server:call(?MODULE, {backend, Module, Url, Opts}).
+
 %%--------------------------------------------------------------------
 %% @doc
 %% Starts the server
@@ -53,12 +56,17 @@ start_link() ->
 
 init([]) ->
   ets:new(?CONF_ETS, [named_table, protected, {read_concurrency, true}, {write_concurrency, true}]),
-  {ok, Backend} = application:get_env(seaconfig, backend),
-  {Module, BackendUrl} = sc_backend_man:prepare_backend(Backend),
-  ets:insert(?CONF_ETS, {conf, Module, BackendUrl}),
-  check_auto_register(Module, BackendUrl),
-  {ok, #state{url = BackendUrl, module = Module}}.
+  Register = application:get_env(seaconfig, autoregister, false),
+  Backend = application:get_env(seaconfig, backend),
+  {_, State} = do_register_backend(Backend, Register),
+  {ok, State}.
 
+
+
+handle_call({backend, Module, Url, Opts}, _From, _) ->
+  Register = proplists:get_value(autoregister, Opts, false),
+  {Res, UState} = do_register_backend({ok, Module, Url}, Register),
+  {reply, Res, UState};
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
 
@@ -89,9 +97,24 @@ code_change(_OldVsn, State, _Extra) ->
 %%% Internal functions
 %%%===================================================================
 %% @private
-check_auto_register(Module, BackendUrl) ->
-  case application:get_env(seaconfig, autoregister, false) of
-    false -> ok;
-    #{service := Service, address := Address, port := Port} ->
-      Module:register(BackendUrl, Service, Address, Port)
-  end.
+do_register_backend(undefined, _) ->
+  {false, #state{}};
+do_register_backend({ok, Backend}, Autoregister) ->
+  {Module, BackendUrl} = prepare_backend(Backend),
+  ets:insert(?CONF_ETS, {conf, Module, BackendUrl}),
+  check_auto_register(Module, BackendUrl, Autoregister),
+  {true, #state{url = BackendUrl, module = Module}}.
+
+%% @private
+check_auto_register(_, _, false) -> ok;
+check_auto_register(Module, BackendUrl, #{service := Service, address := Address, port := Port}) ->
+  Module:register(BackendUrl, Service, Address, Port).
+
+%% @private
+-spec prepare_backend(tuple()) -> tuple().
+prepare_backend({Backend, BackendUrl}) when is_atom(Backend) ->
+  Module = case Backend of
+             consul -> sc_backend_consul;
+             etcd -> sc_backend_etcd
+           end,
+  {Module, BackendUrl}.

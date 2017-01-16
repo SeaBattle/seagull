@@ -10,15 +10,11 @@
 -author("tihon").
 
 %% API
--export([prepare_backend/1, request_backend/1, request_backend/2]).
+-export([register_backend/3, request_backend/1, request_backend/2]).
 
--spec prepare_backend(tuple()) -> tuple().
-prepare_backend({Backend, BackendUrl}) when is_atom(Backend) ->
-  Module = case Backend of
-             consul -> sc_backend_consul;
-             etcd -> sc_backend_etcd
-           end,
-  {Module, BackendUrl}.
+-spec register_backend(module(), string(), proplists:proplist()) -> boolean().
+register_backend(Module, Url, Opts) ->
+  sc_conf_holder:register_backend(Module, Url, Opts).
 
 -spec request_backend(atom()) -> any().
 request_backend(Request) ->
