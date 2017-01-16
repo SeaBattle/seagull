@@ -65,7 +65,7 @@ init([]) ->
 
 handle_call({backend, Module, Url, Opts}, _From, _) ->
   Register = proplists:get_value(autoregister, Opts, false),
-  {Res, UState} = do_register_backend({ok, Module, Url}, Register),
+  {Res, UState} = do_register_backend({ok, {Module, Url}}, Register),
   {reply, Res, UState};
 handle_call(_Request, _From, State) ->
   {reply, ok, State}.
