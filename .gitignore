@@ -13,5 +13,6 @@ rel/example_project
 seaconfig.d
 
 /.idea/
-/.erlang.mk/
+.erlang.mk
 /SeaConfig.iml
+/logs/

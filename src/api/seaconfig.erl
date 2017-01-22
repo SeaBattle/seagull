@@ -16,10 +16,13 @@
 -export([add_backend/2, add_backend/3, add_callback/2, remove_callback/1]).
 
 %% unified api
--export([get_service/1, get_services/0, register/3, get_value/1, set_value/2, get_value/2]).
+-export([get_service/1, get_services/0, get_value/1, set_value/2, get_value/2]).
 
 %% consul api
--export([get_service_near/1, get_service_near/2, dns_request/1, dns_request/2, dns_request/3]).
+-export([register/4, deregister/2, get_service_near/1, get_service_near/2, dns_request/1, dns_request/2, dns_request/3]).
+
+%% etcd api
+-export([register/3, deregister/1]).
 
 -spec add_backend(module(), string()) -> boolean().
 add_backend(Module, Url) ->
@@ -39,7 +42,7 @@ remove_callback(_Var) ->
   erlang:error(not_implemented).
 
 %% unified api
--spec get_service(string()) -> {ok, map()} | {error, any()}.
+-spec get_service(string()) -> {ok, map()} | {ok, list(map())} | undefined | {error, any()}.
 get_service(Service) ->
   sc_backend_man:request_backend(get_service, [Service]).
 
@@ -62,10 +65,6 @@ get_service_near(Service, Node) ->
     {_, _} -> throw(wrong_backend)
   end.
 
--spec register(string(), string(), integer()) -> ok | {error, any()}.
-register(Service, Addr, Port) ->
-  sc_backend_man:request_backend(register, [Service, Addr, Port]).
-
 -spec get_value(binary()) -> binary() | undefined | {error, any()}.
 get_value(Key) ->
   sc_backend_man:request_backend(get_value, [Key]).
@@ -81,6 +80,15 @@ get_value(Key, Default) ->
 set_value(Key, Value) ->
   sc_backend_man:request_backend(set_value, [Key, Value]).
 
+%% ------------ Consul specific ------------
+-spec register(string(), string() | undefined, string(), integer()) -> ok | {error, any()}.
+register(Service, Node, Addr, Port) ->
+  sc_backend_man:request_backend(register, [Service, Node, Addr, Port]).
+
+-spec deregister(string(), string() | undefined) -> ok | {error, any()}.
+deregister(Service, Node) ->
+  sc_backend_man:request_backend(deregister, [Service, Node]).
+
 -spec dns_request(string()) -> list().
 dns_request(Service) ->
   dns_request(Service, ?LOCAL_CONSUL_IP).
@@ -92,3 +100,11 @@ dns_request(Service, Ip) ->
 -spec dns_request(string(), string(), pos_integer()) -> list().
 dns_request(Service, Ip, Port) ->
   sc_backend_consul:dns_request(Service, Ip, Port).
+
+%% ------------ Etcd specific ------------
+-spec register(string(), string(), integer()) -> ok | {error, any()}.
+register(Service, Addr, Port) ->
+  register(Service, undefined, Addr, Port).
+
+-spec deregister(string()) -> ok | {error, any()}.
+deregister(Service) -> deregister(Service, undefined).
