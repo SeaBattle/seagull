@@ -12,13 +12,13 @@ For configuration use `sys.config`:
         ]
     }
 Where:  
-__Backend__ is one of the two supported Backends: `consul` or `etcd`.  
+__Backend__ is an module with implementation of `sc_backend`.
 __BackendUrl__ is url to reach the service.  
 Example:
 
     {seaconfig, 
             [
-                {backend, {consul, "http://127.0.0.1:8500"}}
+                {backend, {sc_backend_consul, "http://127.0.0.1:8500"}}
             ]
         }
 ### Dynamic
@@ -27,18 +27,21 @@ configuration in `sys.config`. Just when you obtain you module, url and other pa
 `seaconfig:add_backend/2/3`. Third argument is a proplist with all your options (listed below).  
 Example:  
 
-    seaconfig:add_backend(consul, "http://mydynamicconsul:8500", [{cache, [{enable, true}, {update_time, 15000}]}]).
+    seaconfig:add_backend(sc_backend_consul, "http://mydynamicconsul:8500", [{cache, #{enable => true, update_time => 15000}}]).
 ### Caching kv
 You can cache kv storage in ets by adding `{cache, [{enable, true}]}` to 
-`sys.config`. By default cache is `false`. Also you can add update interval
+`sys.config`. By default cache is `false`. Also you should update interval
 for cache values to be synchronized with backend by adding 
-`{update_time, TimeMS}` to `cache` section.  
+`#{update_time => TimeMS}` to `cache` section. Default update interval is
+5 sec.
+If you don't need to update values, set `#{update_time => undefined}` to
+ disable cache values updates.
 Full Example:
 
     {seaconfig, 
             [
-                {backend, {consul, "http://127.0.0.1:8500"}},
-                {cache, [{enable, true}, {update_time, 15000}]}
+                {backend, {sc_backend_consul, "http://127.0.0.1:8500"}},
+                {cache, #{enable => true, update_time => 15000}}
             ]
         }
 ### Service auto registration

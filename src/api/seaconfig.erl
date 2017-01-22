@@ -39,43 +39,53 @@ remove_callback(_Var) ->
   erlang:error(not_implemented).
 
 %% unified api
+-spec get_service(string()) -> {ok, map()} | {error, any()}.
 get_service(Service) ->
   sc_backend_man:request_backend(get_service, [Service]).
 
+-spec get_services() -> {ok, map()} | {error, any()}.
 get_services() ->
   sc_backend_man:request_backend(get_services).
 
 %% consul api
+-spec get_service_near(string()) -> {ok, map(), list(map())} | {error, any()}.
 get_service_near(Service) ->
   {ok, Node} = inet:gethostname(),
   get_service_near(Service, Node).
 
+-spec get_service_near(string(), string()) -> {ok, map(), list(map())} | {error, any()}.
 get_service_near(Service, Node) ->
   case sc_conf_holder:get_service_conf() of
     undefined -> throw(no_conf);
-    {consul, Url} ->
+    {sc_backend_consul, Url, _} ->
       sc_backend_consul:get_service_near(Url, Service, Node);
     {_, _} -> throw(wrong_backend)
   end.
 
+-spec register(string(), string(), integer()) -> ok | {error, any()}.
 register(Service, Addr, Port) ->
   sc_backend_man:request_backend(register, [Service, Addr, Port]).
 
+-spec get_value(binary()) -> binary() | undefined | {error, any()}.
 get_value(Key) ->
   sc_backend_man:request_backend(get_value, [Key]).
 
+-spec get_value(binary(), _Default :: any()) -> binary() | _Default | {error, any()}.
 get_value(Key, Default) ->
   case get_value(Key) of
     undefined -> Default;
     Value -> Value
   end.
 
+-spec set_value(binary(), binary()) -> ok | {error, any()}.
 set_value(Key, Value) ->
   sc_backend_man:request_backend(set_value, [Key, Value]).
 
+-spec dns_request(string()) -> list().
 dns_request(Service) ->
   dns_request(Service, ?LOCAL_CONSUL_IP).
 
+-spec dns_request(string(), string()) -> list().
 dns_request(Service, Ip) ->
   dns_request(Service, Ip, ?DEFAULT_CONSUL_DNS_PORT).
 
