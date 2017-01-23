@@ -71,7 +71,7 @@ deregister(Host, Service, Addr) ->
 get_value(Host, Key) ->
   Url = lists:flatten(io_lib:format(?KEYVALUE, [Host, Key])),
   case http_get(Url) of
-    {ok, Data} -> base64:decode(Data);
+    {ok, [#{<<"Value">> := Value}]} -> base64:decode(Value);
     Other -> Other  %error | undefined
   end.
 
