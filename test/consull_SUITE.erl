@@ -15,6 +15,7 @@
 -compile(export_all).
 
 -define(CONSUL_URL, "http://127.0.0.1:8500").
+-define(CONSUL_CHECK_URL, "http://127.0.0.1:8500/v1/status/leader").
 -define(TEST_SERVICE1, "test_service1").
 -define(TEST_SERVICE2, "test_service2").
 
@@ -31,7 +32,7 @@ all() ->
 
 init_per_suite(Config) ->
   application:ensure_all_started(inets),
-  true = ensure_consul(),
+  ?assert(ensure_consul()),
   Config.
 
 end_per_suite(_Config) ->
@@ -209,13 +210,12 @@ test_get_kv(Config) ->
 
 %% @private
 ensure_consul() ->
-%%  case httpc:request(get, {?CONSUL_URL, []}, [], []) of
-%%    {ok, {{_, 200, _}, _, _}} ->
-%%      true;
-%%    Err ->
-%%      {false, Err}
-%%  end.
-  true.
+  case httpc:request(get, {?CONSUL_CHECK_URL, []}, [], []) of
+    {ok, {{_, 200, _}, _, _}} ->
+      true;
+    Err ->
+      {false, Err}
+  end.
 
 %% @private
 start_consul() ->

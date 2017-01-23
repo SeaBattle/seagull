@@ -16,14 +16,14 @@
 -define(SERVICE, "~s/v2/keys/~s").
 -define(SERVICES, "~s/v2/keys").
 -define(ADD_SERVICE, "~s/v2/keys/~s/~s").
--define(SERVICE_KEY, "/~s:~s:~p").
+-define(SERVICE_KEY, "~s:~s:~p").
 -define(SERVICE_VALUE, "value=:~p").
 -define(KEYVALUE, "~s/v2/keys/kv/~s").
--define(DELETE_DIR, "~s/v2/keys/~s/?recursive=true").
+-define(DEREGISTER, "~s/v2/keys/~s/?recursive=true").
 -define(MAP, [{object_format, map}]).
 
 %% API
--export([get_service/2, get_services/1, register/5, get_value/2, set_value/3, deregister/3]).
+-export([get_service/2, get_services/1, register/5, get_value/2, set_value/3, deregister/3, drop_value/2]).
 
 -spec get_service(string(), string()) -> {ok, map()} | {error, any()}.
 get_service(Host, Name) ->
@@ -31,6 +31,7 @@ get_service(Host, Name) ->
   case http_get(Url) of
     {ok, #{<<"errorCode">> := ?NOT_FOUND}} -> undefined;
     {ok, #{<<"node">> := Node}} -> {ok, Node};
+    undefined -> undefined;
     Err -> {error, Err}
   end.
 
@@ -53,44 +54,42 @@ register(Host, Service, _, Address, Port) ->
 
 -spec deregister(string(), string(), undefined) -> ok | {error, any()}.
 deregister(Host, Service, _) ->
-  Url = lists:flatten(io_lib:format(?DELETE_DIR, [Host, Service])),
-  case httpc:request(delete, {Url, []}, [], []) of
-    {ok, {{_, 200, _}, _, Reply}} ->
-      case jsone:decode(Reply, ?MAP) of
-        #{<<"action">> := <<"delete">>} ->
-          ok;
-        #{<<"errorCode">> := Code, <<"message">> := Msg} ->
-          {error, {Code, Msg}}
-      end;
-    {ok, {{_, 404, _}, _, _}} ->
-      undefined;
-    Err ->
-      {error, Err}
-  end.
+  Url = lists:flatten(io_lib:format(?DEREGISTER, [Host, Service])),
+  http_delete(Url).
 
 -spec get_value(string(), binary()) -> binary() | undefined | {error, any()}.
 get_value(Host, Key) ->
   Url = lists:flatten(io_lib:format(?KEYVALUE, [Host, Key])),
   case http_get(Url) of
     {ok, #{<<"errorCode">> := ?NOT_FOUND}} -> undefined;
-    {ok, #{<<"node">> := #{<<"value">> := Value}}} -> {ok, Value};
+    {ok, #{<<"node">> := #{<<"value">> := Value}}} -> Value;
+    undefined -> undefined;
     Err -> {error, Err}
   end.
 
 -spec set_value(string(), binary(), binary()) -> ok | {error, any()}.
 set_value(Host, Key, Value) ->
   Url = lists:flatten(io_lib:format(?KEYVALUE, [Host, Key])),
-  http_put(Url, Value).
+  http_put(Url, <<<<"value=">>/binary, Value/binary>>).
+
+-spec drop_value(string(), binary()) -> ok | {error, any()}.
+drop_value(Host, Key) ->
+  Url = lists:flatten(io_lib:format(?KEYVALUE, [Host, Key])),
+  http_delete(Url).
 
 
 %% @private
 prepare_servises(Nodes) ->
-  lists:map(fun(#{<<"key">> := Key}) -> #{Key => []} end, Nodes).
+  lists:foldl(
+    fun
+      (#{<<"key">> := <<"/kv">>}, Acc) -> Acc;  % skip kv
+      (#{<<"key">> := <<"/", Key/binary>>}, Acc) -> Acc#{Key => []}
+    end, #{}, Nodes).
 
 %% @private
 http_get(Url) ->
   case httpc:request(get, {Url, []}, [], [{body_format, binary}]) of
-    {ok, {{_, 200, _}, _, Reply}} ->
+    {ok, {{_, OK, _}, _, Reply}} when OK == 200; OK == 201 ->
       {ok, jsone:decode(Reply, ?MAP)};
     {ok, {{_, 404, _}, _, _}} ->
       undefined;
@@ -100,12 +99,28 @@ http_get(Url) ->
 
 %% @private
 http_put(Url, Data) ->
-  case httpc:request(put, {Url, [], "application/x-www-form-urlencoded", Data}, [], []) of
-    {ok, {{_, 200, _}, _, Reply}} ->
+  case httpc:request(put, {Url, [], "application/x-www-form-urlencoded", Data}, [], [{body_format, binary}]) of
+    {ok, {{_, OK, _}, _, Reply}} when OK == 200; OK == 201 ->
       case jsone:decode(Reply, ?MAP) of
         #{<<"errorCode">> := Code, <<"message">> := Msg} -> {error, {Code, Msg}};
         #{<<"action">> := <<"set">>} -> ok
       end;
+    Err ->
+      {error, Err}
+  end.
+
+%% @private
+http_delete(Url) ->
+  case httpc:request(delete, {Url, []}, [], [{body_format, binary}]) of
+    {ok, {{_, 200, _}, _, Reply}} ->
+      case jsone:decode(Reply, ?MAP) of
+        #{<<"action">> := <<"delete">>} ->
+          ok;
+        #{<<"errorCode">> := Code, <<"message">> := Msg} ->
+          {error, {Code, Msg}}
+      end;
+    {ok, {{_, 404, _}, _, _}} ->
+      undefined;
     Err ->
       {error, Err}
   end.
