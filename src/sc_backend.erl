@@ -23,3 +23,5 @@
 -callback get_value(Host :: string(), Key :: binary()) -> Value :: binary() | undefined | {error, any()}.
 
 -callback set_value(Host :: string(), Key :: binary(), Value :: binary()) -> ok | {error, any()}.
+
+-callback drop_value(Host :: string(), Key :: binary()) -> ok | {error, any()}.

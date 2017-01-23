@@ -12,7 +12,7 @@
 -behavior(sc_backend).
 
 %% Callbacks
--export([get_service/2, get_services/1, register/5, get_value/2, set_value/3, deregister/3]).
+-export([get_service/2, get_services/1, register/5, get_value/2, set_value/3, deregister/3, drop_value/2]).
 
 %% Consul API
 -export([dns_request/3, get_service_near/3]).
@@ -55,16 +55,22 @@ dns_request(Service, ConsulIp, Port) ->
   {ok, Ip} = inet:parse_address(ConsulIp),
   inet_res:lookup(Service ++ ".service.consul", any, srv, [{nameservers, [{Ip, Port}]}]).
 
--spec register(string(), string(), string(), string(), integer()) -> ok | {error, any()}.
+-spec register(string(), string(), string() | undefined, string(), integer()) -> ok | {error, any()}.
+register(Host, Service, undefined, Address, Port) ->
+  {ok, Node} = inet:gethostname(),
+  register(Host, Service, Node, Address, Port) ;
 register(Host, Service, Node, Address, Port) ->
   Url = lists:flatten(io_lib:format(?REGISTER, [Host])),
   Body = form_register_body(Service, Node, Address, Port),
   http_put(Url, ?JSON, Body).
 
--spec deregister(Host :: string(), Service :: string(), Addr :: string()) -> ok | {error, any()}.
-deregister(Host, Service, Addr) ->
+-spec deregister(string(), string(), string() | undefined) -> ok | {error, any()}.
+deregister(Host, Service, undefined) ->
+  {ok, Node} = inet:gethostname(),
+  deregister(Host, Service, Node);
+deregister(Host, Service, Node) ->
   Url = lists:flatten(io_lib:format(?DEREGISTER, [Host])),
-  Body = form_deregister_body(Service, Addr),
+  Body = form_deregister_body(Service, Node),
   http_put(Url, ?JSON, Body).
 
 -spec get_value(string(), binary()) -> binary() | undefined | {error, any()}.
@@ -79,6 +85,16 @@ get_value(Host, Key) ->
 set_value(Host, Key, Value) ->
   Url = lists:flatten(io_lib:format(?KEYVALUE, [Host, Key])),
   http_put(Url, ?TEXT, Value).
+
+-spec drop_value(string(), binary()) -> ok | {error, any()}.
+drop_value(Host, Key) ->
+  Url = lists:flatten(io_lib:format(?KEYVALUE, [Host, Key])),
+  case httpc:request(delete, {Url, []}, [], [{body_format, binary}]) of
+    {ok, {{_, 200, _}, _, <<"true">>}} ->
+      ok;
+    Err ->
+      {error, Err}
+  end.
 
 %% @private
 form_register_body(Service, Node, Address, Port) ->
