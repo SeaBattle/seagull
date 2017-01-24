@@ -1,6 +1,7 @@
 # SeaConfig
 Configuration api using with `etcd` and `consul` for service-discovery and
-key-value in microservices.
+key-value in microservices.  
+[![Build Status](https://travis-ci.org/SeaBattle/SeaConfig.svg?branch=master)](https://travis-ci.org/SeaBattle/SeaConfig)
 
 ## Configuration
 ### Static
