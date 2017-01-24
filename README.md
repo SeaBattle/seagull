@@ -55,7 +55,7 @@ your applications and add this option to seaconfig conf in `sys.config`:
                 ...
             ]
         }
-### On update callbacks
+### On update callbacks (__Not implemented__)
 If you enabled cache update - you can add callback function, which will 
 be called, when value is updated.  
 Remember, that callbacks are synchronous and are called from main conf sycle,

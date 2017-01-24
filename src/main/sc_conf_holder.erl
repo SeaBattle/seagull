@@ -84,14 +84,12 @@ start_link() ->
 %%%===================================================================
 
 init([]) ->
-  ets:new(?CONF_ETS, [named_table, protected, {read_concurrency, true}, {write_concurrency, true}]),
+  ets:new(?CONF_ETS, [named_table, public, {read_concurrency, true}, {write_concurrency, true}]),
   Register = application:get_env(seaconfig, autoregister, false),
   Caching = application:get_env(seaconfig, cache, #{enable => false}),
   Backend = application:get_env(seaconfig, backend),
-  UpdTime = cache_init_update(Caching),
   {_, State} = do_register_backend(Backend, Register, Caching),
-  {ok, State#state{upd_time = UpdTime}}.
-
+  {ok, State}.
 
 
 handle_call({backend, Module, Url, Opts}, _From, _) ->
@@ -108,7 +106,7 @@ handle_cast(_Request, State) ->
 handle_info(update, State = #state{upd_time = {Time, Ref}, module = Module, url = Url}) ->
   erlang:cancel_timer(Ref),
   List = ets:tab2list(?CONF_ETS),
-  lists:foreach(fun(Key) -> update_value(Key, Module, Url) end, List),
+  lists:foreach(fun(Key) -> update_value(element(1, Key), Module, Url) end, List),
   Tref = erlang:send_after(Time, self(), update),
   {noreply, State#state{upd_time = {Time, Tref}}};
 handle_info(_Info, State) ->
@@ -140,7 +138,8 @@ do_register_backend(undefined, _, _) ->
 do_register_backend({ok, {Module, BackendUrl}}, Autoregister, Caching) ->
   ets:insert(?CONF_ETS, {conf, Module, BackendUrl, Caching}),
   check_auto_register(Module, BackendUrl, Autoregister),
-  {true, #state{url = BackendUrl, module = Module}}.
+  UpdTime = cache_init_update(Caching),
+  {true, #state{url = BackendUrl, module = Module, upd_time = UpdTime}}.
 
 %% @private
 cache_init_update(#{enable := false}) -> undefined;
@@ -156,13 +155,14 @@ cache_init_update(CacheConf = #{enable := true}) ->
 %% @private
 check_auto_register(_, _, false) -> ok;
 check_auto_register(Module, BackendUrl, #{service := Service, address := Address, port := Port}) ->
-  Module:register(BackendUrl, Service, Address, Port).
+  Module:register(BackendUrl, Service, Address, Port, undefined).
 
 %% @private
+update_value(conf, _, _) -> ok;  % do not try to update conf as kv
 update_value(Key, Module, Url) ->
   case Module:get_value(Url, Key) of
     {error, Err} -> {error, Err};
-    AnyRes ->   %cache result from kv. Can be real value or undefined
+    AnyRes ->   % cache result from kv. Can be real value or undefined
       do_update_value(Key, AnyRes)
   end.
 
