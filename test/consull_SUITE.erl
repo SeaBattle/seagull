@@ -48,7 +48,7 @@ end_per_testcase(_Case, Config) ->
 test_register(Config) ->
   start_consul(),
 
-  ok = seaconfig:register(?TEST_SERVICE1, "Node1", "127.0.0.1", 4232),
+  ok = seaconfig:register(?TEST_SERVICE1, "127.0.0.1", 4232, "Node1"),
   {ok, Services} = seaconfig:get_services(),
   ?assert(maps:is_key(list_to_binary(?TEST_SERVICE1), Services)),
   {ok, Service} = seaconfig:get_service(?TEST_SERVICE1),
@@ -70,8 +70,8 @@ test_get_service(Config) ->
 
   undefined = seaconfig:get_service(?TEST_SERVICE1),
 
-  ok = seaconfig:register(?TEST_SERVICE1, "Node1", "127.0.0.1", 4232),
-  ok = seaconfig:register(?TEST_SERVICE2, "Node1", "127.0.0.1", 4232),
+  ok = seaconfig:register(?TEST_SERVICE1, "127.0.0.1", 4232, "Node1"),
+  ok = seaconfig:register(?TEST_SERVICE2, "127.0.0.1", 4232, "Node1"),
   {ok, Service1} = seaconfig:get_service(?TEST_SERVICE1),
   #{<<"Address">> := <<"127.0.0.1">>,
     <<"Node">> := <<"Node1">>,
@@ -80,7 +80,7 @@ test_get_service(Config) ->
     <<"ServiceName">> := <<"test_service1">>,
     <<"ServicePort">> := 4232} = Service1,
 
-  ok = seaconfig:register(?TEST_SERVICE1, "Node2", "127.0.0.1", 4232),
+  ok = seaconfig:register(?TEST_SERVICE1, "127.0.0.1", 4232, "Node2"),
   {ok, Service12} = seaconfig:get_service(?TEST_SERVICE1),
 
   [#{<<"Address">> := <<"127.0.0.1">>,
@@ -115,9 +115,9 @@ test_get_service(Config) ->
 test_get_services(Config) ->
   start_consul(),
 
-  ok = seaconfig:register(?TEST_SERVICE1, "Node1", "127.0.0.1", 4232),
-  ok = seaconfig:register(?TEST_SERVICE2, "Node1", "127.0.0.1", 4232),
-  ok = seaconfig:register(?TEST_SERVICE2, "Node2", "127.0.0.1", 5131),
+  ok = seaconfig:register(?TEST_SERVICE1, "127.0.0.1", 4232, "Node1"),
+  ok = seaconfig:register(?TEST_SERVICE2, "127.0.0.1", 4232, "Node1"),
+  ok = seaconfig:register(?TEST_SERVICE2, "127.0.0.1", 5131, "Node2"),
 
   {ok, Services} = seaconfig:get_services(),
   ?assertEqual(#{<<"consul">> => [], <<"test_service1">> => [], <<"test_service2">> => []}, Services),
@@ -139,9 +139,9 @@ test_get_services(Config) ->
 test_get_services_near(Config) ->
   start_consul(),
 
-  ok = seaconfig:register(?TEST_SERVICE1, undefined, "127.0.0.1", 4232),
-  ok = seaconfig:register(?TEST_SERVICE1, "Node1", "127.0.0.1", 4232),
-  ok = seaconfig:register(?TEST_SERVICE2, "Node2", "127.0.0.1", 5131),
+  ok = seaconfig:register(?TEST_SERVICE1, "127.0.0.1", 4232, undefined),
+  ok = seaconfig:register(?TEST_SERVICE1, "127.0.0.1", 4232, "Node1"),
+  ok = seaconfig:register(?TEST_SERVICE2, "127.0.0.1", 5131, "Node2"),
 
   {ok, Service, Other} = seaconfig:get_service_near(?TEST_SERVICE1),
   {ok, Node} = inet:gethostname(),
@@ -158,9 +158,9 @@ test_get_services_near(Config) ->
 test_get_dns_request(Config) ->
   start_consul(),
 
-  ok = seaconfig:register(?TEST_SERVICE1, undefined, "127.0.0.1", 4232),
-  ok = seaconfig:register(?TEST_SERVICE1, "Node1", "127.0.0.1", 4232),
-  ok = seaconfig:register(?TEST_SERVICE2, undefined, "127.0.0.1", 5131),
+  ok = seaconfig:register(?TEST_SERVICE1, "127.0.0.1", 4232, undefined),
+  ok = seaconfig:register(?TEST_SERVICE1, "127.0.0.1", 4232, "Node1"),
+  ok = seaconfig:register(?TEST_SERVICE2, "127.0.0.1", 5131, undefined),
 
   Services = seaconfig:dns_request(?TEST_SERVICE1),
   {ok, Node} = inet:gethostname(),

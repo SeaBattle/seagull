@@ -52,11 +52,11 @@ get_services() ->
 
 -spec register(string(), string(), integer()) -> ok | {error, any()}.
 register(Service, Addr, Port) ->
-  register(Service, undefined, Addr, Port).
+  register(Service, Addr, Port, undefined).
 
--spec register(string(), string() | undefined, string(), integer()) -> ok | {error, any()}.
-register(Service, Node, Addr, Port) ->
-  sc_backend_man:request_backend(register, [Service, Node, Addr, Port]).
+-spec register(string(), string(), integer(), string() | undefined) -> ok | {error, any()}.
+register(Service, Addr, Port, Node) ->
+  sc_backend_man:request_backend(register, [Service, Addr, Port, Node]).
 
 -spec deregister(string()) -> ok | {error, any()}.
 deregister(Service) -> deregister(Service, undefined).

@@ -46,11 +46,11 @@ end_per_testcase(_Case, Config) ->
 test_register(Config) ->
   start_etcd(),
 
-  ok = seaconfig:register(?TEST_SERVICE1, "Node1", "127.0.0.1", 4232),
+  ok = seaconfig:register(?TEST_SERVICE1, "127.0.0.1", 4232, "Node1"),
   {ok, Services} = seaconfig:get_services(),
   ?assert(maps:is_key(list_to_binary(?TEST_SERVICE1), Services)),
   {ok, Service} = seaconfig:get_service(?TEST_SERVICE1),
-  #{<<"key">> := <<"/test_service1">>,
+  #{<<"key">> := <<"test_service1">>,
     <<"nodes">> := [
       #{<<"key">> := <<"/test_service1/127.0.0.1:test_service1:4232">>,
         <<"value">> := <<":4232">>}]} = Service,
@@ -67,41 +67,21 @@ test_get_service(Config) ->
 
   undefined = seaconfig:get_service(?TEST_SERVICE1),
 
-  ok = seaconfig:register(?TEST_SERVICE1, "Node1", "127.0.0.1", 4232),
-  ok = seaconfig:register(?TEST_SERVICE2, "Node1", "127.0.0.1", 4232),
+  ok = seaconfig:register(?TEST_SERVICE1, "127.0.0.1", 4232, "Node1"),
+  ok = seaconfig:register(?TEST_SERVICE2, "127.0.0.1", 4232, "Node1"),
   {ok, Service1} = seaconfig:get_service(?TEST_SERVICE1),
-  #{<<"Address">> := <<"127.0.0.1">>,
-    <<"Node">> := <<"Node1">>,
-    <<"ServiceAddress">> := <<"127.0.0.1">>,
-    <<"ServiceID">> := <<"test_service1">>,
-    <<"ServiceName">> := <<"test_service1">>,
-    <<"ServicePort">> := 4232} = Service1,
-
-  ok = seaconfig:register(?TEST_SERVICE1, "Node2", "127.0.0.1", 4232),
-  {ok, Service12} = seaconfig:get_service(?TEST_SERVICE1),
-
-  [#{<<"Address">> := <<"127.0.0.1">>,
-    <<"Node">> := <<"Node1">>,
-    <<"ServiceAddress">> := <<"127.0.0.1">>,
-    <<"ServiceID">> := <<"test_service1">>,
-    <<"ServiceName">> := <<"test_service1">>,
-    <<"ServicePort">> := 4232},
-    #{<<"Address">> := <<"127.0.0.1">>,
-      <<"Node">> := <<"Node2">>,
-      <<"ServiceAddress">> := <<"127.0.0.1">>,
-      <<"ServiceID">> := <<"test_service1">>,
-      <<"ServiceName">> := <<"test_service1">>}] = Service12,
+  #{<<"key">> := <<"test_service1">>,
+    <<"nodes">> := [
+      #{<<"key">> := <<"/test_service1/127.0.0.1:test_service1:4232">>,
+        <<"value">> := <<":4232">>}]} = Service1,
 
   {ok, Service2} = seaconfig:get_service(?TEST_SERVICE2),
-  #{<<"Address">> := <<"127.0.0.1">>,
-    <<"Node">> := <<"Node1">>,
-    <<"ServiceAddress">> := <<"127.0.0.1">>,
-    <<"ServiceID">> := <<"test_service2">>,
-    <<"ServiceName">> := <<"test_service2">>,
-    <<"ServicePort">> := 4232} = Service2,
+  #{<<"key">> := <<"test_service2">>,
+    <<"nodes">> := [
+      #{<<"key">> := <<"/test_service2/127.0.0.1:test_service2:4232">>,
+        <<"value">> := <<":4232">>}]} = Service2,
 
   ok = seaconfig:deregister(?TEST_SERVICE1, "Node1"),
-  ok = seaconfig:deregister(?TEST_SERVICE1, "Node2"),
   ok = seaconfig:deregister(?TEST_SERVICE2, "Node1"),
 
   undefined = seaconfig:get_service(?TEST_SERVICE1),
@@ -112,24 +92,21 @@ test_get_service(Config) ->
 test_get_services(Config) ->
   start_etcd(),
 
-  ok = seaconfig:register(?TEST_SERVICE1, "Node1", "127.0.0.1", 4232),
-  ok = seaconfig:register(?TEST_SERVICE2, "Node1", "127.0.0.1", 4232),
-  ok = seaconfig:register(?TEST_SERVICE2, "Node2", "127.0.0.1", 5131),
+  ok = seaconfig:register(?TEST_SERVICE1, "127.0.0.1", 4232),
+  ok = seaconfig:register(?TEST_SERVICE2, "127.0.0.1", 4232),
 
   {ok, Services} = seaconfig:get_services(),
-  ?assertEqual(#{<<"consul">> => [], <<"test_service1">> => [], <<"test_service2">> => []}, Services),
+  ?assertEqual(
+    #{<<"etcd-2380">> => [], <<"etcd-4001">> => [], <<"test_service1">> => [], <<"test_service2">> => []}, Services),
 
-  ok = seaconfig:deregister(?TEST_SERVICE2, "Node1"), % service 2 still lives on Node2
+  ok = seaconfig:deregister(?TEST_SERVICE2, "Node1"),  % service 2 is out
   {ok, Services2} = seaconfig:get_services(),
-  ?assertEqual(#{<<"consul">> => [], <<"test_service1">> => [], <<"test_service2">> => []}, Services2),
-
-  ok = seaconfig:deregister(?TEST_SERVICE2, "Node2"), % service 2 is out
-  {ok, Services3} = seaconfig:get_services(),
-  ?assertEqual(#{<<"consul">> => [], <<"test_service1">> => []}, Services3),
+  ?assertEqual(
+    #{<<"etcd-2380">> => [], <<"etcd-4001">> => [], <<"test_service1">> => []}, Services2),
 
   ok = seaconfig:deregister(?TEST_SERVICE1, "Node1"), % service 1 is out
   {ok, Services4} = seaconfig:get_services(),
-  ?assertEqual(#{<<"consul">> => []}, Services4),
+  ?assertEqual(#{<<"etcd-2380">> => [], <<"etcd-4001">> => []}, Services4),
 
   Config.
 

@@ -55,13 +55,13 @@ dns_request(Service, ConsulIp, Port) ->
   {ok, Ip} = inet:parse_address(ConsulIp),
   inet_res:lookup(Service ++ ".service.consul", any, srv, [{nameservers, [{Ip, Port}]}]).
 
--spec register(string(), string(), string() | undefined, string(), integer()) -> ok | {error, any()}.
-register(Host, Service, undefined, Address, Port) ->
+-spec register(string(), string(), string(), integer(), string() | undefined) -> ok | {error, any()}.
+register(Host, Service, Address, Port, undefined) ->
   {ok, Node} = inet:gethostname(),
-  register(Host, Service, Node, Address, Port) ;
-register(Host, Service, Node, Address, Port) ->
+  register(Host, Service, Address, Port, Node) ;
+register(Host, Service, Address, Port, Node) ->
   Url = lists:flatten(io_lib:format(?REGISTER, [Host])),
-  Body = form_register_body(Service, Node, Address, Port),
+  Body = form_register_body(Service, Address, Port, Node),
   http_put(Url, ?JSON, Body).
 
 -spec deregister(string(), string(), string() | undefined) -> ok | {error, any()}.
@@ -97,7 +97,7 @@ drop_value(Host, Key) ->
   end.
 
 %% @private
-form_register_body(Service, Node, Address, Port) ->
+form_register_body(Service, Address, Port, Node) ->
   Adr = list_to_binary(Address),
   jsone:encode(#{
     <<"Address">> => Adr,

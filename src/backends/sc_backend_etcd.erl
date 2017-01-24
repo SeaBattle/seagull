@@ -30,7 +30,7 @@ get_service(Host, Name) ->
   Url = lists:flatten(io_lib:format(?SERVICE, [Host, Name])),
   case http_get(Url) of
     {ok, #{<<"errorCode">> := ?NOT_FOUND}} -> undefined;
-    {ok, #{<<"node">> := Node}} -> {ok, Node};
+    {ok, #{<<"node">> := Node}} -> {ok, prepare_service(Node)};
     undefined -> undefined;
     Err -> {error, Err}
   end.
@@ -46,7 +46,7 @@ get_services(Host) ->
   end.
 
 -spec register(string(), string(), undefined, string(), integer()) -> ok | {error, any()}.
-register(Host, Service, _, Address, Port) ->
+register(Host, Service, Address, Port, _) ->
   Key = lists:flatten(io_lib:format(?SERVICE_KEY, [Address, Service, Port])),
   Url = lists:flatten(io_lib:format(?ADD_SERVICE, [Host, Service, Key])),
   Value = lists:flatten(io_lib:format(?SERVICE_VALUE, [Port])),
@@ -85,6 +85,10 @@ prepare_servises(Nodes) ->
       (#{<<"key">> := <<"/kv">>}, Acc) -> Acc;  % skip kv
       (#{<<"key">> := <<"/", Key/binary>>}, Acc) -> Acc#{Key => []}
     end, #{}, Nodes).
+
+%% @private
+prepare_service(Service = #{<<"key">> := <<"/", Key/binary>>}) ->
+  Service#{<<"key">> => Key}.
 
 %% @private
 http_get(Url) ->
