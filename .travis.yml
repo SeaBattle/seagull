@@ -1,0 +1,14 @@
+language: erlang
+otp_release:
+  - 19.0
+  - 18.0
+script:  "rm -rf .git && make tests"
+addons:
+before_install:
+  - wget 'https://dl.bintray.com/mitchellh/consul/0.4.1_linux_amd64.zip'
+  - unzip "0.4.1_linux_amd64.zip"
+  - ./consul --version
+  - ./consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul &
+  - curl -L https://github.com/coreos/etcd/releases/download/v3.1.0/etcd-v3.1.0-linux-amd64.tar.gz -o /tmp/etcd-v3.1.0-linux-amd64.tar.gz
+  - mkdir -p /tmp/test-etcd && tar xzvf /tmp/etcd-v3.1.0-linux-amd64.tar.gz -C /tmp/test-etcd --strip-components=1
+  - /tmp/test-etcd/etcd &
