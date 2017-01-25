@@ -5,8 +5,8 @@ otp_release:
 script:  "rm -rf .git && make tests"
 addons:
 before_install:
-  - wget 'https://dl.bintray.com/mitchellh/consul/0.4.1_linux_amd64.zip'
-  - unzip "0.4.1_linux_amd64.zip"
+  - wget 'https://releases.hashicorp.com/consul/0.7.2/consul_0.7.2_linux_amd64.zip'
+  - unzip "consul_0.7.2_linux_amd64.zip"
   - ./consul --version
   - ./consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul &
   - curl -L https://github.com/coreos/etcd/releases/download/v3.1.0/etcd-v3.1.0-linux-amd64.tar.gz -o /tmp/etcd-v3.1.0-linux-amd64.tar.gz
