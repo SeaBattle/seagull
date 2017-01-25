@@ -2,11 +2,14 @@ language: erlang
 otp_release:
   - 19.0
   - 18.0
-script:  "rm -rf .git && make tests"
+script:
+  - $HOME/etcd/etcd &
+  - $HOME/consul/consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul &
+  - "rm -rf .git && make tests"
 addons:
+cache:
+  directories:
+  - $HOME/etcd
+  - $HOME/consul
 before_install:
-  - sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 0C49F3730359A14518585931BC711F9BA15703C6
-  - sudo apt-get update -q
-  - sudo apt-get install -y consul
-  - sudo apt-get install -y etcd
-  - sleep 2
+  - bash install-deps.sh
