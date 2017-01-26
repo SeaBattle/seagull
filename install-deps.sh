@@ -12,7 +12,7 @@ fi
 
 if [ ! -f "$HOME/consul/consul" ]; then
   mkdir -p $HOME/consul
-  curl -L http://releases.hashicorp.com/consul/0.7.2/consul_0.7.2_linux_amd64.zip \
+  curl -L https://releases.hashicorp.com/consul/0.7.2/consul_0.7.2_linux_amd64.zip \
        -o $HOME/consul/consul_0.7.2_linux_amd64.zip
   unzip $HOME/consul/consul_0.7.2_linux_amd64.zip -d $HOME/consul
 else

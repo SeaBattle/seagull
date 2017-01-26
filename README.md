@@ -104,3 +104,10 @@ You can use consul special api with consul backend:
                 <<"ServiceTags">> => [],
                 <<"TaggedAddresses">> => #{<<"lan">> => <<"192.168.1.105">>,
                     <<"wan">> => <<"192.168.1.105">>}}]
+
+### Testing
+To run tests of backends you will need this backends running and accessible.
+`sc_backend_consul` tries to find consul on `http://127.0.0.1:8500`, and 
+`sc_backend_etcd` tries to find etcd on `http://127.0.0.1:2379`.  
+You can use `install-deps.sh` script for getting executables of theese two 
+deps downloaded to `$HOME/consul` and `$HOME/etcd`.
