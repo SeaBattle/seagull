@@ -140,16 +140,12 @@ test_get_services_near(Config) ->
   start_consul(),
 
   ok = seaconfig:register(?TEST_SERVICE1, "127.0.0.1", 4232),
-  ok = seaconfig:register(?TEST_SERVICE1, "127.0.0.1", 4232, "Node1"),
   ok = seaconfig:register(?TEST_SERVICE2, "127.0.0.1", 5131, "Node2"),
 
-  {ok, Service, Other} = seaconfig:get_service_near(?TEST_SERVICE1),
   {ok, Node} = inet:gethostname(),
   NodeBin = list_to_binary(Node),
-  #{<<"Node">> := <<"Node1">>} = Service,
-  [#{<<"Node">> := NodeBin}] = Other,
+  {ok, #{<<"Node">> := NodeBin}, []} = seaconfig:get_service_near(?TEST_SERVICE1),
 
-  ok = seaconfig:deregister(?TEST_SERVICE1, "Node1"),
   ok = seaconfig:deregister(?TEST_SERVICE1),
   ok = seaconfig:deregister(?TEST_SERVICE2, "Node2"),
 
