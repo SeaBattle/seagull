@@ -1,7 +1,7 @@
-# SeaConfig
+# Seagull
 Configuration api using with `etcd` and `consul` for service-discovery and
-key-value in microservices.  
-[![Build Status](https://travis-ci.org/SeaBattle/SeaConfig.svg?branch=master)](https://travis-ci.org/SeaBattle/SeaConfig)
+key-value cache.
+[![Build Status](https://travis-ci.org/SeaBattle/seagull.svg?branch=master)](https://travis-ci.org/SeaBattle/seagull)
 
 ## Configuration
 ### Static
