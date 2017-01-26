@@ -97,16 +97,16 @@ test_get_services(Config) ->
 
   {ok, Services} = seaconfig:get_services(),
   ?assertEqual(
-    #{<<"etcd-2380">> => [], <<"etcd-4001">> => [], <<"test_service1">> => [], <<"test_service2">> => []}, Services),
+    #{<<"test_service1">> => [], <<"test_service2">> => []}, Services),
 
   ok = seaconfig:deregister(?TEST_SERVICE2, "Node1"),  % service 2 is out
   {ok, Services2} = seaconfig:get_services(),
   ?assertEqual(
-    #{<<"etcd-2380">> => [], <<"etcd-4001">> => [], <<"test_service1">> => []}, Services2),
+    #{<<"test_service1">> => []}, Services2),
 
   ok = seaconfig:deregister(?TEST_SERVICE1, "Node1"), % service 1 is out
   {ok, Services4} = seaconfig:get_services(),
-  ?assertEqual(#{<<"etcd-2380">> => [], <<"etcd-4001">> => []}, Services4),
+  ?assertEqual(0, map_size(Services4)),
 
   Config.
 

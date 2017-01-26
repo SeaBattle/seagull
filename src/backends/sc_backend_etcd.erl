@@ -41,6 +41,8 @@ get_services(Host) ->
   case http_get(Url) of
     {ok, #{<<"node">> := #{<<"dir">> := true, <<"nodes">> := Nodes}}} ->
       {ok, prepare_servises(Nodes)};
+    {ok, #{<<"node">> := #{<<"dir">> := true}}} ->  % no services
+      {ok, #{}};
     Err ->
       {error, Err}
   end.
