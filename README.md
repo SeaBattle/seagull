@@ -1,6 +1,6 @@
 # Seagull
 Configuration api using with `etcd` and `consul` for service-discovery and
-key-value cache.
+key-value cache.  
 [![Build Status](https://travis-ci.org/SeaBattle/seagull.svg?branch=master)](https://travis-ci.org/SeaBattle/seagull)
 
 ## Configuration
