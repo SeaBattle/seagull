@@ -1,5 +1,5 @@
 # Seagull
-Service for working with configuration and service-discovery via [`etcd`](https://github.com/coreos/etcd) or [`consul`](https://www.consul.io/). Can be useful in microservices.
+Service for working with configuration and service-discovery via [`etcd`](https://github.com/coreos/etcd) or [`consul`](https://www.consul.io/). Can be useful in microservices.   
 [![Build Status](https://travis-ci.org/SeaBattle/seagull.svg?branch=master)](https://travis-ci.org/SeaBattle/seagull)
 
 ## Configuration
