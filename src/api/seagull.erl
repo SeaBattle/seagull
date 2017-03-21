@@ -6,7 +6,7 @@
 %%% @end
 %%% Created : 28. Oct 2016 20:12
 %%%-------------------------------------------------------------------
--module(seaconfig).
+-module(seagull).
 -author("tihon").
 
 -define(DEFAULT_CONSUL_DNS_PORT, 8600).

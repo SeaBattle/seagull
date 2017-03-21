@@ -24,6 +24,7 @@
 -define(REGISTER, "~s/v1/catalog/register").
 -define(DEREGISTER, "~s/v1/catalog/deregister").
 -define(SERVICE_NEAR, "~s/v1/catalog/service/~s?near=~s").
+-define(KEYVALUEREC, "~s/v1/kv/~s?recurse").
 -define(KEYVALUE, "~s/v1/kv/~s").
 
 -define(MAP, [{object_format, map}]).
@@ -55,16 +56,18 @@ dns_request(Service, ConsulIp, Port) ->
   {ok, Ip} = inet:parse_address(ConsulIp),
   inet_res:lookup(Service ++ ".service.consul", any, srv, [{nameservers, [{Ip, Port}]}]).
 
--spec register(string(), string(), string(), integer(), string() | undefined) -> ok | {error, any()}.
+-spec register(string(), string(), string(), integer(), string() | undefined) ->
+  ok | {error, any()}.
 register(Host, Service, Address, Port, undefined) ->
   {ok, Node} = inet:gethostname(),
-  register(Host, Service, Address, Port, Node) ;
+  register(Host, Service, Address, Port, Node);
 register(Host, Service, Address, Port, Node) ->
   Url = lists:flatten(io_lib:format(?REGISTER, [Host])),
   Body = form_register_body(Service, Address, Port, Node),
   http_put(Url, ?JSON, Body).
 
--spec deregister(string(), string(), string() | undefined) -> ok | {error, any()}.
+-spec deregister(string(), string(), string() | undefined) ->
+  ok | {error, any()}.
 deregister(Host, Service, undefined) ->
   {ok, Node} = inet:gethostname(),
   deregister(Host, Service, Node);
@@ -73,11 +76,13 @@ deregister(Host, Service, Node) ->
   Body = form_deregister_body(Service, Node),
   http_put(Url, ?JSON, Body).
 
--spec get_value(string(), binary()) -> binary() | undefined | {error, any()}.
+-spec get_value(string(), binary()) ->
+  binary() | proplists:proplist() | undefined | {error, any()}.
 get_value(Host, Key) ->
-  Url = lists:flatten(io_lib:format(?KEYVALUE, [Host, Key])),
+  Url = lists:flatten(io_lib:format(?KEYVALUEREC, [Host, Key])),
   case http_get(Url) of
-    {ok, [#{<<"Value">> := Value}]} -> base64:decode(Value);
+    {ok, [Value]} -> get_value(Value);
+    {ok, Values} -> get_values(Values);
     Other -> Other  %error | undefined
   end.
 
@@ -88,7 +93,7 @@ set_value(Host, Key, Value) ->
 
 -spec drop_value(string(), binary()) -> ok | {error, any()}.
 drop_value(Host, Key) ->
-  Url = lists:flatten(io_lib:format(?KEYVALUE, [Host, Key])),
+  Url = lists:flatten(io_lib:format(?KEYVALUEREC, [Host, Key])),
   case httpc:request(delete, {Url, []}, [], [{body_format, binary}]) of
     {ok, {{_, 200, _}, _, <<"true">>}} ->
       ok;
@@ -134,3 +139,15 @@ http_put(Url, Type, Body) ->
     {ok, {{_, 200, _}, _, _}} -> ok;
     Err -> {error, Err}
   end.
+
+%% @private
+get_values(Values) ->
+  lists:foldl(
+    fun
+      (#{<<"Value">> := null}, Acc) -> Acc;  % directory
+      (Value = #{<<"Key">> := Key}, Acc) ->  % value
+        [{Key, get_value(Value)} | Acc]
+    end, [], Values).
+
+%% @private
+get_value(#{<<"Value">> := Value}) -> base64:decode(Value).

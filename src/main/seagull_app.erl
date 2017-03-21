@@ -1,4 +1,4 @@
--module(seaconfig_app).
+-module(seagull_app).
 
 -behaviour(application).
 
