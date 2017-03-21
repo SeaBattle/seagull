@@ -41,14 +41,14 @@ end_per_testcase(_Case, Config) ->
 test_auto_register(Config) ->
   {ok, _} = sc_conf_holder:start_link(),
 
-  undefined = try seaconfig:get_service("my_service")
+  undefined = try seagull:get_service("my_service")
               catch throw:no_conf -> undefined
               end,
 
   ?assert(sc_conf_holder:register_backend(sc_backend_consul, ?CONSUL_URL,
     [{autoregister, #{service => "my_service", address => "127.0.0.1", port => 4503}}])),
 
-  {ok, Service} = seaconfig:get_service("my_service"),
+  {ok, Service} = seagull:get_service("my_service"),
 
   {ok, Node} = inet:gethostname(),
   NodeBin = list_to_binary(Node),
@@ -60,7 +60,7 @@ test_auto_register(Config) ->
     <<"ServiceName">> := <<"my_service">>,
     <<"ServicePort">> := 4503} = Service,
 
-  ok = seaconfig:deregister("my_service"),
+  ok = seagull:deregister("my_service"),
   Config.
 
 test_auto_update(Config) ->
@@ -75,7 +75,7 @@ test_auto_update(Config) ->
   timer:sleep(10),
   [] = ets:lookup(sc_conf, <<"key1">>), % no value as it was not selected first
 
-  ?assertEqual(<<"value1">>, seaconfig:get_value(<<"key1">>)),
+  ?assertEqual(<<"value1">>, seagull:get_value(<<"key1">>)),
 
   [{<<"key1">>, <<"value1">>}] = ets:lookup(sc_conf, <<"key1">>), % no value as it was not selected first
 
@@ -85,10 +85,10 @@ test_auto_update(Config) ->
 
   [{<<"key1">>, <<"modified">>}] = ets:lookup(sc_conf, <<"key1">>), % value was modified
 
-  ?assertEqual(<<"modified">>, seaconfig:get_value(<<"key1">>)),
+  ?assertEqual(<<"modified">>, seagull:get_value(<<"key1">>)),
 
-  ok = seaconfig:drop_value(<<"key1">>),
-  ok = seaconfig:drop_value(<<"key2">>),
+  ok = seagull:drop_value(<<"key1">>),
+  ok = seagull:drop_value(<<"key2">>),
 
   Config.
 
@@ -104,13 +104,13 @@ test_caching_on_get(Config) ->
   ?assert(sc_conf_holder:register_backend(sc_backend_consul, ?CONSUL_URL,
     [{cache, #{enable => true, update_time => undefined}}])),
 
-  ?assertEqual(<<"value1">>, seaconfig:get_value(<<"key1">>)),
+  ?assertEqual(<<"value1">>, seagull:get_value(<<"key1">>)),
   true = receive
            {get_value, _, <<"key1">>} -> true
          after 100 -> false
          end,
 
-  ?assertEqual(<<"value1">>, seaconfig:get_value(<<"key1">>)),
+  ?assertEqual(<<"value1">>, seagull:get_value(<<"key1">>)),
 %%  second time value was fetched from cache
   false = receive
            {get_value, _, <<"key1">>} -> true
@@ -118,8 +118,8 @@ test_caching_on_get(Config) ->
          end,
 
   meck:unload(),
-  ok = seaconfig:drop_value(<<"key1">>),
-  ok = seaconfig:drop_value(<<"key2">>),
+  ok = seagull:drop_value(<<"key1">>),
+  ok = seagull:drop_value(<<"key2">>),
 
   Config.
 
@@ -132,16 +132,16 @@ test_update_on_set(Config) ->
   ?assert(sc_conf_holder:register_backend(sc_backend_consul, ?CONSUL_URL,
     [{cache, #{enable => true, update_time => undefined}}])),
 
-  ?assertEqual(<<"value1">>, seaconfig:get_value(<<"key1">>)),
+  ?assertEqual(<<"value1">>, seagull:get_value(<<"key1">>)),
 
   [{<<"key1">>, <<"value1">>}] = ets:lookup(sc_conf, <<"key1">>), % value in cache
 
-  ok = seaconfig:set_value(<<"key1">>, <<"new_value">>),
+  ok = seagull:set_value(<<"key1">>, <<"new_value">>),
 
   [{<<"key1">>, <<"new_value">>}] = ets:lookup(sc_conf, <<"key1">>), % value was modified
 
-  ok = seaconfig:drop_value(<<"key1">>),
-  ok = seaconfig:drop_value(<<"key2">>),
+  ok = seagull:drop_value(<<"key1">>),
+  ok = seagull:drop_value(<<"key2">>),
 
   Config.
 

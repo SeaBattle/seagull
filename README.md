@@ -6,7 +6,7 @@ Service for working with configuration and service-discovery via [`etcd`](https:
 ### Static
 For configuration use `sys.config`:
 
-    {seaconfig, 
+    {seagull, 
         [
             {backend, {Backend, BackendUrl}}
         ]
@@ -16,18 +16,18 @@ __Backend__ is an module with implementation of `sc_backend`.
 __BackendUrl__ is url to reach the service.  
 Example:
 
-    {seaconfig, 
+    {seagull, 
             [
                 {backend, {sc_backend_consul, "http://127.0.0.1:8500"}}
             ]
         }
 ### Dynamic
-In case you don't know consul url on compilation time you do not need to specify seaconfig 
+In case you don't know consul url on compilation time you do not need to specify seagull 
 configuration in `sys.config`. Just when you obtain you module, url and other params call 
-`seaconfig:add_backend/2/3`. Third argument is a proplist with all your options (listed below).  
+`seagull:add_backend/2/3`. Third argument is a proplist with all your options (listed below).  
 Example:  
 
-    seaconfig:add_backend(sc_backend_consul, "http://mydynamicconsul:8500", [{cache, #{enable => true, update_time => 15000}}]).
+    seagull:add_backend(sc_backend_consul, "http://mydynamicconsul:8500", [{cache, #{enable => true, update_time => 15000}}]).
 ### Caching kv
 You can cache kv storage in ets by adding `{cache, [{enable, true}]}` to 
 `sys.config`. By default cache is `false`. Also you should update interval
@@ -38,17 +38,17 @@ If you don't need to update values, set `#{update_time => undefined}` to
  disable cache values updates.
 Full Example:
 
-    {seaconfig, 
+    {seagull, 
             [
                 {backend, {sc_backend_consul, "http://127.0.0.1:8500"}},
                 {cache, #{enable => true, update_time => 15000}}
             ]
         }
 ### Service auto registration
-To make registration of your service on application start - add `seaconfig` to
-your applications and add this option to seaconfig conf in `sys.config`:
+To make registration of your service on application start - add `seagull` to
+your applications and add this option to seagull conf in `sys.config`:
 
-    {seaconfig, 
+    {seagull, 
             [
                 ...
                 {autoregister, #{service => Service, address => Address, port => Port}},
@@ -63,23 +63,23 @@ so do not do any long operations in them.
 Example:
     
     ResetAllPassFun = fun(NewPass) -> database_man ! {reset_pass, NewPass} end, 
-    seaconfig:add_callback(<<"user_pass">>, ResetAllPassFun).
+    seagull:add_callback(<<"user_pass">>, ResetAllPassFun).
 Callback can be removed with `remove_callback:/1` function.
 
 ## Usage
 ### Unified api
 After configuring backend you can use unified api:
 
-    1> seaconfig:get_services().
+    1> seagull:get_services().
     #{<<"consul">> => [],<<"postgres">> => [],<<"redis">> => []}
 
 ### Consul special api
 You can use consul special api with consul backend:
 
-    1> seaconfig:dns_request("redis").
+    1> seagull:dns_request("redis").
     [{1,1,6379,"tihon_home.node.dc1.consul"},
     {1,1,6379,"tihon_work.su.node.dc1.consul"}]
-    2> seaconfig:get_service_near("redis").
+    2> seagull:get_service_near("redis").
     {ok, #{<<"Address">> => <<"192.168.1.204">>,
             <<"CreateIndex">> => 313,
             <<"ModifyIndex">> => 313,
