@@ -150,4 +150,5 @@ get_values(Values) ->
     end, [], Values).
 
 %% @private
+get_value(#{<<"Value">> := null}) -> undefined;
 get_value(#{<<"Value">> := Value}) -> base64:decode(Value).
