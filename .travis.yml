@@ -16,4 +16,4 @@ cache:
 before_install:
   - bash install-deps.sh
   - sudo apt-get update
-  - sudo apt-get install -y python3.6 python3-pip
+  - sudo apt-get install -y python3 python3-pip
