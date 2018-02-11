@@ -1,5 +1,5 @@
 dist: trusty
-sudo: false
+sudo: true
 language: erlang
 otp_release:
   - 19.0
@@ -7,7 +7,7 @@ otp_release:
 script:
   - $HOME/etcd/etcd &
   - $HOME/consul/consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul &
-  - "rm -rf .git && make tests"
+  - "rm -rf .git && coon ct"
 addons:
 cache:
   directories:
@@ -15,3 +15,4 @@ cache:
   - $HOME/consul
 before_install:
   - bash install-deps.sh
+  - sudo apt-get install -y python3.6 python3-pip

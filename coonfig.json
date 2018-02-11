@@ -1,0 +1,18 @@
+{
+  "name": "seagull",
+  "app_vsn": "3.1.1",
+  "deps": [
+    {
+      "name": "jsone",
+      "url": "git://github.com/sile/jsone",
+      "tag": "v0.3.3"
+    }
+  ],
+  "test_deps": [
+    {
+      "name": "meck",
+      "url": "git://github.com/eproxus/meck",
+      "tag": "0.8.4"
+    }
+  ]
+}
