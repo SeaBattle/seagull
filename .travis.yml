@@ -6,7 +6,7 @@ otp_release:
   - 18.0
 script:
   - $HOME/etcd/etcd &
-  - $HOME/consul/consul agent -server -bootstrap-expect 1 -data-dir /tmp/consul &
+  - $HOME/consul/consul agent -bind=127.0.0.1 -server -bootstrap-expect 1 -data-dir /tmp/consul &
   - "rm -rf .git && coon ct"
 addons:
 cache:
